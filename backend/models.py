@@ -13,10 +13,10 @@ class User(db.Model):
     status = db.Column(db.String(20), nullable = False, default = "active")
 
     managed_treks = db.relationship("Trek", back_populates = "staff", lazy = True)
-    bookings = db.relationship("Bookings", back_populates = "user", lazy = True)
+    bookings = db.relationship("Booking", back_populates = "user", lazy = True)
 
     def __repr__(self):
-        return f"<User {self.name}>"
+        return f"<User {self.username}>"
 
 
 
