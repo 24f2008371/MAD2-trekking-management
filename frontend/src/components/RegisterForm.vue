@@ -18,7 +18,7 @@
 
     <!-- Inputs Form -->
     <form @submit.prevent="handleRegister" novalidate class="d-flex flex-column gap-3">
-      
+
       <!-- Grid Row 1 -->
       <div class="row g-3">
         <!-- Full Name -->
@@ -26,14 +26,8 @@
           <label class="input-label">Full Name</label>
           <div class="input-wrapper" :class="{ 'error-state': nameErr }">
             <i class="bi bi-person input-icon"></i>
-            <input 
-              v-model="name" 
-              type="text" 
-              placeholder="John Doe" 
-              class="light-input"
-              @blur="validateName"
-              @input="clearErrors"
-            />
+            <input v-model="name" type="text" placeholder="John Doe" class="light-input" @blur="validateName"
+              @input="clearErrors" />
           </div>
           <div v-if="nameErr" class="error-msg-text">
             <i class="bi bi-info-circle"></i> {{ nameErr }}
@@ -45,14 +39,8 @@
           <label class="input-label">Email Address</label>
           <div class="input-wrapper" :class="{ 'error-state': emailErr }">
             <i class="bi bi-envelope input-icon"></i>
-            <input 
-              v-model="email" 
-              type="email" 
-              placeholder="name@example.com" 
-              class="light-input"
-              @blur="validateEmail"
-              @input="clearErrors"
-            />
+            <input v-model="email" type="email" placeholder="name@example.com" class="light-input" @blur="validateEmail"
+              @input="clearErrors" />
           </div>
           <div v-if="emailErr" class="error-msg-text">
             <i class="bi bi-info-circle"></i> {{ emailErr }}
@@ -67,14 +55,8 @@
           <label class="input-label">Phone Number</label>
           <div class="input-wrapper" :class="{ 'error-state': phoneErr }">
             <i class="bi bi-telephone input-icon"></i>
-            <input 
-              v-model="phone" 
-              type="tel" 
-              placeholder="+1 (555) 000-0000" 
-              class="light-input"
-              @blur="validatePhone"
-              @input="clearErrors"
-            />
+            <input v-model="phone" type="tel" placeholder="+1 (555) 000-0000" class="light-input" @blur="validatePhone"
+              @input="clearErrors" />
           </div>
           <div v-if="phoneErr" class="error-msg-text">
             <i class="bi bi-info-circle"></i> {{ phoneErr }}
@@ -86,14 +68,8 @@
           <label class="input-label">Password</label>
           <div class="input-wrapper" :class="{ 'error-state': pwdErr }">
             <i class="bi bi-lock input-icon"></i>
-            <input 
-              v-model="password" 
-              :type="showPassword ? 'text' : 'password'" 
-              placeholder="••••••••" 
-              class="light-input pe-5"
-              @blur="validatePassword"
-              @input="clearErrors"
-            />
+            <input v-model="password" :type="showPassword ? 'text' : 'password'" placeholder="••••••••"
+              class="light-input pe-5" @blur="validatePassword" @input="clearErrors" />
             <button type="button" class="btn-eye-toggle" @click="showPassword = !showPassword">
               <i class="bi" :class="showPassword ? 'bi-eye-slash' : 'bi-eye'"></i>
             </button>
@@ -129,6 +105,7 @@
 
 <script setup>
 import { ref } from 'vue'
+import api from '../api/api.js'
 
 const emit = defineEmits(['auth-success'])
 
@@ -176,15 +153,19 @@ const validateEmail = () => {
 }
 
 const validatePhone = () => {
-  if (!phone.value.trim()) {
+
+  if (!phone.value) {
     phoneErr.value = 'Phone number is required'
     return false
   }
+
   const digits = phone.value.replace(/[\s()+-]/g, '')
-  if (digits.length < 8) {
-    phoneErr.value = 'Please enter a valid phone number'
+
+  if (digits.length < 1) {
+    phoneErr.value = 'Phone number is required'
     return false
   }
+
   phoneErr.value = ''
   return true
 }
@@ -194,10 +175,7 @@ const validatePassword = () => {
     pwdErr.value = 'Password is required'
     return false
   }
-  if (password.value.length < 6) {
-    pwdErr.value = 'Password must be at least 6 characters'
-    return false
-  }
+
   pwdErr.value = ''
   return true
 }
@@ -208,7 +186,7 @@ const clearErrors = () => {
   termsErr.value = ''
 }
 
-const handleRegister = () => {
+const handleRegister = async () => {
   clearErrors()
 
   const isNameVal = validateName()
@@ -225,14 +203,57 @@ const handleRegister = () => {
     return
   }
 
+  // isSubmitting.value = true
+  // setTimeout(() => {
+  //   isSubmitting.value = false
+  //   successMsg.value = 'Registration successful! Directing to Login...'
+  //   setTimeout(() => {
+  //     emit('auth-success')
+  //   }, 1500)
+  // }, 1500)
+
   isSubmitting.value = true
-  setTimeout(() => {
-    isSubmitting.value = false
-    successMsg.value = 'Registration successful! Directing to Login...'
+
+  try {
+
+    const response = await api.post("/register", {
+
+      username: name.value,
+      email: email.value,
+      phone: phone.value,
+      password: password.value
+
+    })
+
+    successMsg.value = response.data.message
+
     setTimeout(() => {
-      emit('auth-success')
+      emit("auth-success")
     }, 1500)
-  }, 1500)
+
+  }
+
+  catch (error) {
+
+    if (error.response) {
+
+      errorMsg.value = error.response.data.message
+
+    }
+
+    else {
+
+      errorMsg.value = "Server not reachable."
+
+    }
+
+  }
+
+  finally {
+
+    isSubmitting.value = false
+
+  }
 }
 </script>
 
@@ -276,7 +297,7 @@ const handleRegister = () => {
   border-color: var(--accent-orange);
   background: #ffffff;
   box-shadow: 0 0 0 4px rgba(255, 107, 53, 0.12),
-              0 2px 4px rgba(15, 23, 42, 0.02);
+    0 2px 4px rgba(15, 23, 42, 0.02);
 }
 
 .input-wrapper.error-state {
@@ -361,7 +382,7 @@ const handleRegister = () => {
   border-color: #94A3B8;
 }
 
-.check-box-input:checked ~ .checkmark {
+.check-box-input:checked~.checkmark {
   background-color: var(--accent-orange);
   border-color: var(--accent-orange);
 }
@@ -379,7 +400,7 @@ const handleRegister = () => {
   transform: rotate(45deg);
 }
 
-.check-box-input:checked ~ .checkmark::after {
+.check-box-input:checked~.checkmark::after {
   display: block;
 }
 

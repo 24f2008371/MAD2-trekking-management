@@ -43,6 +43,17 @@ import Testimonials from '../components/Testimonials.vue'
 import Gallery from '../components/Gallery.vue'
 import CallToAction from '../components/CallToAction.vue'
 import Footer from '../components/Footer.vue'
+import { onMounted } from "vue";
+import api from "../api/api";
+
+onMounted(async () => {
+  try {
+    const response = await api.get("/test");
+    console.log(response.data);
+  } catch (err) {
+    console.error(err);
+  }
+});
 </script>
 
 <style scoped>
@@ -51,3 +62,5 @@ import Footer from '../components/Footer.vue'
   width: 100%;
 }
 </style>
+
+

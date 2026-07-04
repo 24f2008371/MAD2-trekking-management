@@ -71,6 +71,7 @@
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+import api from '../api/api.js'
 
 const router = useRouter()
 
@@ -106,10 +107,7 @@ const validatePassword = () => {
     pwdErr.value = 'Password is required'
     return false
   }
-  if (password.value.length < 6) {
-    pwdErr.value = 'Password must be at least 6 characters'
-    return false
-  }
+
   pwdErr.value = ''
   return true
 }
@@ -119,7 +117,7 @@ const clearErrors = () => {
   successMsg.value = ''
 }
 
-const handleLogin = () => {
+const handleLogin = async () => {
   clearErrors()
   const isEValid = validateEmail()
   const isPValid = validatePassword()
@@ -130,13 +128,41 @@ const handleLogin = () => {
   }
 
   isSubmitting.value = true
-  setTimeout(() => {
+  try {
+    const response = await api.post('/login', {
+      email: email.value,
+      password: password.value
+    })
+    
+    if (response.data && response.data.data) {
+      const data = response.data.data
+      localStorage.setItem('access_token', data.access_token)
+      localStorage.setItem('user', JSON.stringify({
+        username: data.username,
+        email: data.email,
+        role: data.role
+      }))
+      
+      successMsg.value = response.data.message || 'Login successful! Redirecting...'
+      setTimeout(() => {
+        if (data.role === 'user') {
+          router.push('/dashboard')
+        } else {
+          router.push('/')
+        }
+      }, 1200)
+    } else {
+      errorMsg.value = response.data.message || 'Invalid response from server.'
+    }
+  } catch (error) {
+    if (error.response && error.response.data && error.response.data.message) {
+      errorMsg.value = error.response.data.message
+    } else {
+      errorMsg.value = 'Invalid email or password.'
+    }
+  } finally {
     isSubmitting.value = false
-    successMsg.value = 'Welcome back! Redirecting...'
-    setTimeout(() => {
-      router.push('/')
-    }, 1200)
-  }, 1500)
+  }
 }
 </script>
 

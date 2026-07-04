@@ -42,12 +42,22 @@
 
         <!-- Action Buttons -->
         <div class="d-flex flex-column flex-lg-row align-items-center justify-content-center gap-2">
-          <router-link to="/auth/login" class="btn-nav-login px-4 py-2 font-heading text-white">
-            Login
-          </router-link>
-          <router-link to="/auth/register" class="btn-premium-orange px-4 py-2 text-decoration-none">
-            Register
-          </router-link>
+          <template v-if="!isLoggedIn">
+            <router-link to="/auth/login" class="btn-nav-dashboard px-4 py-2 text-decoration-none">
+              Login
+            </router-link>
+            <router-link to="/auth/register" class="btn-premium-orange px-4 py-2 text-decoration-none">
+              Register
+            </router-link>
+          </template>
+          <template v-else>
+            <router-link v-if="userRole === 'user'" to="/dashboard" class="btn-nav-dashboard px-4 py-2 text-decoration-none">
+              Dashboard
+            </router-link>
+            <a href="#" class="btn-premium-orange px-4 py-2 text-decoration-none" @click.prevent="handleLogout">
+              Logout
+            </a>
+          </template>
         </div>
       </div>
     </div>
@@ -59,6 +69,8 @@ import { ref, onMounted, onUnmounted } from 'vue'
 
 const isScrolled = ref(false)
 const activeSection = ref('home')
+const isLoggedIn = ref(false)
+const userRole = ref('')
 
 const handleScroll = () => {
   // Toggle scrolled navbar state
@@ -90,9 +102,28 @@ const handleScroll = () => {
   activeSection.value = currentSection
 }
 
+const handleLogout = () => {
+  localStorage.removeItem('access_token')
+  localStorage.removeItem('user')
+  isLoggedIn.value = false
+  userRole.value = ''
+  window.location.reload()
+}
+
 onMounted(() => {
   window.addEventListener('scroll', handleScroll)
   handleScroll()
+  
+  const token = localStorage.getItem('access_token')
+  const userStr = localStorage.getItem('user')
+  if (token && userStr) {
+    isLoggedIn.value = true
+    try {
+      userRole.value = JSON.parse(userStr).role
+    } catch (e) {
+      // ignore
+    }
+  }
 })
 
 onUnmounted(() => {
@@ -162,6 +193,24 @@ onUnmounted(() => {
 
 .btn-nav-login:hover {
   color: var(--accent-orange) !important;
+}
+
+.btn-nav-dashboard {
+  background-color: transparent;
+  color: white !important;
+  font-weight: 600;
+  border: 2px solid white;
+  border-radius: 30px;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-nav-dashboard:hover {
+  background-color: white;
+  color: #0F172A !important;
+  transform: translateY(-2px);
 }
 
 @media (max-width: 991.98px) {
