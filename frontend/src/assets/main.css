@@ -1,0 +1,226 @@
+/* Import Bootstrap CSS and Icons directly */
+@import 'bootstrap/dist/css/bootstrap.min.css';
+@import 'bootstrap-icons/font/bootstrap-icons.css';
+
+:root {
+  /* Brand Colors */
+  --primary-navy: #0F172A;
+  --secondary-slate: #1E293B;
+  --accent-orange: #FF6B35;
+  --accent-blue: #3B82F6;
+  --bg-light: #F8FAFC;
+  --text-dark: #111827;
+  
+  /* Gradients */
+  --gradient-orange: linear-gradient(135deg, #FF6B35 0%, #FF8F66 100%);
+  --gradient-dark: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
+  
+  /* Typography */
+  --font-heading: 'Montserrat', sans-serif;
+  --font-body: 'Poppins', sans-serif;
+
+  /* UI Tokens */
+  --radius-lg: 20px;
+  --radius-md: 15px;
+  --radius-sm: 8px;
+  --shadow-sm: 0 4px 6px rgba(15, 23, 42, 0.04);
+  --shadow-md: 0 10px 25px rgba(15, 23, 42, 0.08);
+  --shadow-lg: 0 20px 40px rgba(15, 23, 42, 0.12);
+  --transition-smooth: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  --transition-fast: all 0.15s ease;
+
+  /* Glassmorphism */
+  --glass-bg: rgba(15, 23, 42, 0.55);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-blur: blur(16px);
+  --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.25);
+
+  --glass-card-bg: rgba(255, 255, 255, 0.85);
+  --glass-card-border: rgba(255, 255, 255, 0.5);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-body);
+  background-color: var(--bg-light);
+  color: var(--text-dark);
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3, h4, h5, h6, .font-heading {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+/* Custom premium classes */
+.text-navy { color: var(--primary-navy); }
+.text-slate { color: var(--secondary-slate); }
+.text-orange { color: var(--accent-orange); }
+.text-blue { color: var(--accent-blue); }
+
+.bg-navy { background-color: var(--primary-navy); }
+.bg-slate { background-color: var(--secondary-slate); }
+.bg-light-slate { background-color: var(--bg-light); }
+
+/* Premium Orange Gradient Button with Classy Hover */
+.btn-premium-orange {
+  background: var(--gradient-orange);
+  color: white;
+  font-family: var(--font-heading);
+  font-weight: 600;
+  padding: 12px 28px;
+  border-radius: 30px;
+  border: none;
+  transition: var(--transition-smooth);
+}
+
+.btn-premium-orange:hover {
+  color: white;
+  transform: translateY(-2px);
+  background: linear-gradient(135deg, #FF7D4F 0%, #FFA885 100%);
+  box-shadow: 0 10px 25px rgba(255, 107, 53, 0.35), 
+              0 4px 12px rgba(15, 23, 42, 0.12);
+}
+
+/* Outline Button with Classy Hover */
+.btn-premium-outline {
+  background-color: transparent;
+  color: white;
+  font-family: var(--font-heading);
+  font-weight: 600;
+  padding: 12px 28px;
+  border-radius: 30px;
+  border: 2px solid white;
+  transition: var(--transition-smooth);
+}
+
+.btn-premium-outline:hover {
+  background-color: white;
+  color: var(--primary-navy);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(255, 255, 255, 0.2), 
+              0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Dark Navbar with blur on scroll */
+.navbar-scrolled-dark {
+  background: rgba(15, 23, 42, 0.85) !important;
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: var(--glass-shadow);
+}
+
+/* Glassmorphic Panel (Dark background) */
+.glass-panel {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.02) 100%) !important;
+  backdrop-filter: blur(24px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.2), 
+              0 20px 40px rgba(0, 0, 0, 0.3) !important;
+  border-radius: var(--radius-lg);
+}
+
+/* Glassmorphic Card (Light background) */
+.glass-card {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.75) 0%, rgba(255, 255, 255, 0.45) 100%) !important;
+  backdrop-filter: blur(20px) saturate(160%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(160%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.4) !important;
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.5), 
+              0 15px 30px rgba(15, 23, 42, 0.08) !important;
+  border-radius: var(--radius-lg);
+  transition: var(--transition-smooth);
+}
+
+.glass-card:hover {
+  transform: translateY(-8px);
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.6),
+              0 20px 40px rgba(15, 23, 42, 0.15), 
+              0 0 20px rgba(59, 130, 246, 0.2) !important;
+}
+
+/* Icons with Orange + Blue blends */
+.icon-brand-glow {
+  background: linear-gradient(135deg, rgba(255, 107, 53, 0.1) 0%, rgba(59, 130, 246, 0.1) 100%);
+  color: var(--accent-orange);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  transition: var(--transition-smooth);
+}
+
+.icon-brand-glow i {
+  background: linear-gradient(135deg, var(--accent-orange) 0%, var(--accent-blue) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Hover Zoom Scale */
+.hover-scale {
+  transition: var(--transition-smooth);
+}
+
+.hover-scale:hover {
+  transform: scale(1.03);
+}
+
+/* Keyframes */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 1s ease forwards;
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.8s cubic-bezier(0.25, 0.8, 0.25, 1) forwards;
+}
+
+.delay-1 { animation-delay: 0.2s; }
+.delay-2 { animation-delay: 0.4s; }
+.delay-3 { animation-delay: 0.6s; }
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 10px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-light);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--secondary-slate);
+  border-radius: 5px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--primary-navy);
+}
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 80px;
+}
