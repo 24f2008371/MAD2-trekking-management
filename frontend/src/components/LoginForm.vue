@@ -18,22 +18,22 @@
 
     <!-- Inputs Form -->
     <form @submit.prevent="handleLogin" novalidate class="d-flex flex-column gap-3">
-      <!-- Email -->
+      <!-- Username -->
       <div class="form-group position-relative">
-        <label class="input-label">Email Address</label>
-        <div class="input-wrapper" :class="{ 'error-state': emailErr }">
-          <i class="bi bi-envelope input-icon"></i>
+        <label class="input-label">Username</label>
+        <div class="input-wrapper" :class="{ 'error-state': usernameErr }">
+          <i class="bi bi-person input-icon"></i>
           <input 
-            v-model="email" 
-            type="email" 
-            placeholder="name@example.com" 
+            v-model="username" 
+            type="text" 
+            placeholder="your_username" 
             class="light-input"
-            @blur="validateEmail"
+            @blur="validateUsername"
             @input="clearErrors"
           />
         </div>
-        <div v-if="emailErr" class="error-msg-text">
-          <i class="bi bi-info-circle"></i> {{ emailErr }}
+        <div v-if="usernameErr" class="error-msg-text">
+          <i class="bi bi-info-circle"></i> {{ usernameErr }}
         </div>
       </div>
 
@@ -76,7 +76,7 @@ import api from '../api/api.js'
 const router = useRouter()
 
 // Form States
-const email = ref('')
+const username = ref('')
 const password = ref('')
 const showPassword = ref(false)
 
@@ -85,20 +85,15 @@ const errorMsg = ref('')
 const successMsg = ref('')
 
 // Field Errors
-const emailErr = ref('')
+const usernameErr = ref('')
 const pwdErr = ref('')
 
-const validateEmail = () => {
-  if (!email.value) {
-    emailErr.value = 'Email address is required'
+const validateUsername = () => {
+  if (!username.value) {
+    usernameErr.value = 'Username is required'
     return false
   }
-  const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-  if (!regex.test(email.value)) {
-    emailErr.value = 'Please enter a valid email'
-    return false
-  }
-  emailErr.value = ''
+  usernameErr.value = ''
   return true
 }
 
@@ -119,10 +114,10 @@ const clearErrors = () => {
 
 const handleLogin = async () => {
   clearErrors()
-  const isEValid = validateEmail()
+  const isUValid = validateUsername()
   const isPValid = validatePassword()
 
-  if (!isEValid || !isPValid) {
+  if (!isUValid || !isPValid) {
     errorMsg.value = 'Please fill all fields correctly.'
     return
   }
@@ -130,7 +125,7 @@ const handleLogin = async () => {
   isSubmitting.value = true
   try {
     const response = await api.post('/login', {
-      email: email.value,
+      username: username.value,
       password: password.value
     })
     
@@ -145,7 +140,11 @@ const handleLogin = async () => {
       
       successMsg.value = response.data.message || 'Login successful! Redirecting...'
       setTimeout(() => {
-        if (data.role === 'user') {
+        if (data.role === 'admin') {
+          router.push('/admin/dashboard')
+        } else if (data.role === 'staff') {
+          router.push('/staff/dashboard')
+        } else if (data.role === 'user') {
           router.push('/dashboard')
         } else {
           router.push('/')

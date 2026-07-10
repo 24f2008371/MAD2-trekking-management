@@ -2,26 +2,6 @@
   <div class="dashboard-container">
     <!-- 12-Column Grid -->
     <div class="row g-4">
-      <!-- Section 1 — Quick Overview (4 Stats Cards) -->
-      <div class="col-12">
-        <div class="row g-4">
-          <div v-for="stat in stats" :key="stat.title" class="col-12 col-md-6 col-lg-3">
-            <div class="stat-card">
-              <div class="stat-header">
-                <span class="stat-icon" v-html="stat.icon"></span>
-                <span class="stat-trend" :class="stat.trendType">
-                  {{ stat.trend }}
-                </span>
-              </div>
-              <div class="stat-body">
-                <h3 class="stat-number">{{ stat.value }}</h3>
-                <p class="stat-title">{{ stat.title }}</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
       <!-- Section 2 — Available Treks -->
       <div class="col-12 mt-5">
         <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
@@ -80,16 +60,14 @@
                   <div class="spec-text-single mt-1">
                     Slots Left: <span :class="{ 'text-danger fw-bold': trek.slots === 0 }">{{ trek.slots }}</span>
                   </div>
-                </div>
-
-                <div class="card-footer-action mt-auto">
+                </div>                 <div class="card-footer-action mt-auto">
                   <button 
                     class="btn w-100" 
-                    :class="trek.slots > 0 ? 'btn-primary-accent' : 'btn-disabled'"
-                    :disabled="trek.slots === 0"
-                    @click="$emit('view-details', trek.name)"
+                    :class="getTrekBtnClass(trek)"
+                    :disabled="trek.status === 'Closed' || trek.status === 'Completed' || trek.slots === 0 || getTrekBookingStatus(trek.id) !== null || hasClashingBooking(trek)"
+                    @click="$emit('book-trek', trek.id)"
                   >
-                    {{ trek.slots > 0 ? 'Book Now' : 'Not Available' }}
+                    {{ getTrekBtnText(trek) }}
                   </button>
                 </div>
               </div>
@@ -105,13 +83,23 @@
             </div>
           </div>
         </div>
+        
+        <!-- Show More Link for Available Treks -->
+        <div class="d-flex justify-content-end mt-3" v-if="dashboardFilteredTreks.length > 0">
+          <a href="#" class="view-all-link text-decoration-none" @click.prevent="$emit('change-tab', 'explore')">
+            Show More Treks <i class="bi bi-arrow-right ms-1"></i>
+          </a>
+        </div>
       </div>
 
       <!-- Section 3 — My Bookings -->
       <div class="col-12 mt-5 mb-3">
         <h2 class="section-title mb-4">My Bookings</h2>
         <div class="bookings-table-card">
-          <div class="table-responsive">
+          <div v-if="myBookingsList.length === 0" class="text-center py-4 text-secondary">
+            <p class="mb-0">You don't have any bookings yet. Book a trek to see it here!</p>
+          </div>
+          <div v-else class="table-responsive">
             <table class="table table-custom align-middle">
               <thead>
                 <tr>
@@ -123,15 +111,17 @@
                 </tr>
               </thead>
               <tbody>
-                <tr>
-                  <td class="fw-bold text-dark">Kedarkantha Trek</td>
-                  <td class="text-secondary">10 May 2026</td>
-                  <td class="text-secondary">15 May - 20 May 2026</td>
+                <tr v-for="booking in myBookingsList.slice(0, 3)" :key="booking.id">
+                  <td class="fw-bold text-dark">{{ booking.trekName }}</td>
+                  <td class="text-secondary">{{ booking.bookingDate }}</td>
+                  <td class="text-secondary">{{ booking.trekDates }}</td>
                   <td>
-                    <span class="status-badge-blue">Booked</span>
+                    <span :class="getStatusClass(booking.status)">
+                      {{ booking.status }}
+                    </span>
                   </td>
                   <td class="text-end">
-                    <button class="btn btn-secondary-outline btn-sm px-3" @click="$emit('view-details', 'Kedarkantha Trek')">
+                    <button class="btn btn-secondary-outline btn-sm px-3" @click="$emit('view-details', booking.trekName)">
                       View Details
                     </button>
                   </td>
@@ -151,11 +141,7 @@
 </template>
 
 <script setup>
-defineProps({
-  stats: {
-    type: Array,
-    required: true
-  },
+const props = defineProps({
   dashboardFilteredTreks: {
     type: Array,
     required: true
@@ -167,10 +153,51 @@ defineProps({
   locationFilter: {
     type: String,
     required: true
+  },
+  myBookingsList: {
+    type: Array,
+    required: true
   }
 })
 
-defineEmits(['update:difficultyFilter', 'update:locationFilter', 'view-details', 'change-tab'])
+defineEmits(['update:difficultyFilter', 'update:locationFilter', 'view-details', 'change-tab', 'book-trek'])
+
+const getStatusClass = (status) => {
+  if (status === 'Pending') return 'status-badge-orange'
+  if (status === 'Cancelled') return 'status-badge-red'
+  if (status === 'Confirmed' || status === 'Booked') return 'status-badge-green'
+  return 'status-badge-blue'
+}
+
+const getTrekBookingStatus = (trekId) => {
+  if (!props.myBookingsList) return null
+  const booking = props.myBookingsList.find(b => b.trekId === trekId && b.status !== 'Cancelled')
+  return booking ? booking.status : null
+}
+
+const hasClashingBooking = (trek) => {
+  if (!props.myBookingsList) return false
+  return props.myBookingsList.some(b => b.startDate === trek.start_date && b.status !== 'Cancelled' && b.trekId !== trek.id)
+}
+
+const getTrekBtnText = (trek) => {
+  if (trek.status === 'Closed') return 'Closed'
+  if (trek.status === 'Completed') return 'Completed'
+  const status = getTrekBookingStatus(trek.id)
+  if (status === 'Pending') return 'Pending'
+  if (status === 'Confirmed' || status === 'Booked') return 'Booked'
+  if (hasClashingBooking(trek)) return 'Date Clash'
+  return trek.slots > 0 ? 'Book Now' : 'Full'
+}
+
+const getTrekBtnClass = (trek) => {
+  if (trek.status === 'Closed' || trek.status === 'Completed') return 'btn-disabled bg-secondary text-white border-0'
+  const status = getTrekBookingStatus(trek.id)
+  if (status === 'Pending') return 'btn-disabled bg-warning text-dark border-0'
+  if (status === 'Confirmed' || status === 'Booked') return 'btn-disabled bg-success text-white border-0'
+  if (hasClashingBooking(trek)) return 'btn-disabled bg-danger text-white border-0'
+  return trek.slots > 0 ? 'btn-primary-accent' : 'btn-disabled'
+}
 </script>
 
 <style scoped>
@@ -474,6 +501,33 @@ defineEmits(['update:difficultyFilter', 'update:locationFilter', 'view-details',
 .status-badge-blue {
   background-color: #EFF6FF;
   color: #3B82F6;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.25rem 0.65rem;
+  border-radius: 6px;
+}
+
+.status-badge-green {
+  background-color: #E6FDF4;
+  color: #10B981;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.25rem 0.65rem;
+  border-radius: 6px;
+}
+
+.status-badge-orange {
+  background-color: #FFF3CD;
+  color: #856404;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.25rem 0.65rem;
+  border-radius: 6px;
+}
+
+.status-badge-red {
+  background-color: #F8D7DA;
+  color: #721C24;
   font-size: 0.75rem;
   font-weight: 600;
   padding: 0.25rem 0.65rem;

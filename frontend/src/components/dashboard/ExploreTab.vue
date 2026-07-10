@@ -79,15 +79,22 @@
               </div>
             </div>
 
-            <div class="card-footer-action">
-              <button 
-                class="btn w-100" 
-                :class="trek.slots > 0 ? 'btn-primary-accent' : 'btn-disabled'"
-                :disabled="trek.slots === 0"
-                @click="$emit('view-details', trek.name)"
-              >
-                {{ trek.slots > 0 ? 'View Details' : 'View Details' }}
-              </button>
+            <div class="card-footer-action row g-2">
+              <div class="col-6">
+                <button class="btn btn-secondary-outline btn-sm w-100 py-2 text-xs" @click="$emit('view-details', trek.name)">
+                  Details
+                </button>
+              </div>
+              <div class="col-6">
+                <button 
+                  class="btn btn-sm w-100 py-2 text-xs" 
+                  :class="getTrekBtnClass(trek)"
+                  :disabled="trek.status === 'Closed' || trek.status === 'Completed' || trek.slots === 0 || getTrekBookingStatus(trek.id) !== null || hasClashingBooking(trek)"
+                  @click="$emit('book-trek', trek.id)"
+                >
+                  {{ getTrekBtnText(trek) }}
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -136,7 +143,7 @@
 </template>
 
 <script setup>
-defineProps({
+const props = defineProps({
   searchQuery: {
     type: String,
     required: true
@@ -164,6 +171,10 @@ defineProps({
   filteredTreks: {
     type: Array,
     required: true
+  },
+  myBookingsList: {
+    type: Array,
+    required: true
   }
 })
 
@@ -173,8 +184,39 @@ defineEmits([
   'update:locationFilter',
   'update:currentPage',
   'reset-filters',
-  'view-details'
+  'view-details',
+  'book-trek'
 ])
+
+const getTrekBookingStatus = (trekId) => {
+  if (!props.myBookingsList) return null
+  const booking = props.myBookingsList.find(b => b.trekId === trekId && b.status !== 'Cancelled')
+  return booking ? booking.status : null
+}
+
+const hasClashingBooking = (trek) => {
+  if (!props.myBookingsList) return false
+  return props.myBookingsList.some(b => b.startDate === trek.start_date && b.status !== 'Cancelled' && b.trekId !== trek.id)
+}
+
+const getTrekBtnText = (trek) => {
+  if (trek.status === 'Closed') return 'Closed'
+  if (trek.status === 'Completed') return 'Completed'
+  const status = getTrekBookingStatus(trek.id)
+  if (status === 'Pending') return 'Pending'
+  if (status === 'Confirmed' || status === 'Booked') return 'Booked'
+  if (hasClashingBooking(trek)) return 'Date Clash'
+  return trek.slots > 0 ? 'Book Now' : 'Full'
+}
+
+const getTrekBtnClass = (trek) => {
+  if (trek.status === 'Closed' || trek.status === 'Completed') return 'btn-disabled bg-secondary text-white border-0'
+  const status = getTrekBookingStatus(trek.id)
+  if (status === 'Pending') return 'btn-disabled bg-warning text-dark border-0'
+  if (status === 'Confirmed' || status === 'Booked') return 'btn-disabled bg-success text-white border-0'
+  if (hasClashingBooking(trek)) return 'btn-disabled bg-danger text-white border-0'
+  return trek.slots > 0 ? 'btn-primary-accent' : 'btn-disabled'
+}
 </script>
 
 <style scoped>

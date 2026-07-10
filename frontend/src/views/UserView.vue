@@ -25,14 +25,15 @@
         <DashboardTab
           v-if="activeTab === 'dashboard'"
           key="dashboard"
-          :stats="stats"
           :dashboard-filtered-treks="dashboardFilteredTreks"
           :difficulty-filter="difficultyFilter"
           :location-filter="locationFilter"
+          :my-bookings-list="myBookingsList"
           @update:difficultyFilter="difficultyFilter = $event"
           @update:locationFilter="locationFilter = $event"
           @view-details="viewTrekDetails"
           @change-tab="selectTab"
+          @book-trek="bookTrek"
         />
 
         <!-- Browse Treks Tab Container -->
@@ -46,12 +47,14 @@
           :paginated-treks="paginatedTreks"
           :total-pages="totalPages"
           :filtered-treks="filteredTreks"
+          :my-bookings-list="myBookingsList"
           @update:searchQuery="searchQuery = $event"
           @update:difficultyFilter="difficultyFilter = $event"
           @update:locationFilter="locationFilter = $event"
           @update:currentPage="currentPage = $event"
           @reset-filters="resetFilters"
           @view-details="viewTrekDetails"
+          @book-trek="bookTrek"
         />
 
         <!-- Profile Tab Container -->
@@ -86,6 +89,13 @@
           @view-details="viewTrekDetails"
         />
 
+        <!-- Trekking History Tab Container -->
+        <HistoryTab
+          v-else-if="activeTab === 'history'"
+          key="history"
+          :history-list="historyList"
+        />
+
         <!-- Other Tabs Fallback -->
         <div v-else key="fallback" class="dashboard-container py-5">
           <div class="empty-state-container">
@@ -97,6 +107,112 @@
         </div>
       </transition>
     </main>
+
+    <!-- Premium Trek Details Modal -->
+    <div v-if="selectedTrek" class="premium-details-overlay" @click="selectedTrek = null">
+      <div class="premium-details-card" @click.stop>
+        <button class="close-btn" @click="selectedTrek = null">
+          <i class="bi bi-x-lg"></i>
+        </button>
+
+        <div class="details-image-wrapper">
+          <img :src="selectedTrek.image" :alt="selectedTrek.name" class="details-image" />
+          <span class="difficulty-badge" :class="selectedTrek.difficulty.toLowerCase()">
+            {{ selectedTrek.difficulty }}
+          </span>
+        </div>
+
+        <div class="details-body p-4 text-start">
+          <h3 class="font-heading text-navy mb-2" style="font-weight: 700;">{{ selectedTrek.name }}</h3>
+          
+          <div class="d-flex align-items-center gap-3 text-secondary text-sm mb-4">
+            <span><i class="bi bi-geo-alt-fill text-orange"></i> {{ selectedTrek.location }}</span>
+            <span>•</span>
+            <span><i class="bi bi-clock-fill text-orange"></i> {{ selectedTrek.duration }}</span>
+          </div>
+
+          <div class="row g-2 mb-4">
+            <div class="col-6">
+              <div class="info-card p-2 rounded-3 bg-light">
+                <span class="d-block text-xs text-muted mb-0">Departure Date</span>
+                <span class="fw-semibold text-dark text-sm">{{ selectedTrek.start_date || 'TBD' }}</span>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="info-card p-2 rounded-3 bg-light">
+                <span class="d-block text-xs text-muted mb-0">Return Date</span>
+                <span class="fw-semibold text-dark text-sm">{{ selectedTrek.end_date || 'TBD' }}</span>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="info-card p-2 rounded-3 bg-light">
+                <span class="d-block text-xs text-muted mb-0">Available Slots</span>
+                <span class="fw-semibold text-sm" :class="selectedTrek.slots > 0 ? 'text-success' : 'text-danger'">
+                  {{ selectedTrek.slots }} left
+                </span>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="info-card p-2 rounded-3 bg-light">
+                <span class="d-block text-xs text-muted mb-0">Price per Person</span>
+                <span class="fw-bold text-orange text-sm">{{ selectedTrek.price }}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="d-flex gap-2">
+            <button class="btn btn-secondary-outline w-50 py-2 text-xs" @click="selectedTrek = null">Close</button>
+            <button 
+              class="btn btn-primary-accent w-50 py-2 text-xs" 
+              :disabled="selectedTrek.slots === 0"
+              @click="bookTrek(selectedTrek.id); selectedTrek = null"
+            >
+              {{ selectedTrek.slots > 0 ? 'Book Expedition' : 'Fully Booked' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Premium Payment Modal -->
+    <div v-if="payingTrek" class="premium-alert-overlay" @click="payingTrek = null">
+      <div class="premium-alert-box" @click.stop style="max-width: 420px;">
+        <div class="alert-icon success" style="background-color: #FFF0EB;">
+          <span style="color: var(--color-accent); font-size: 2rem;">💳</span>
+        </div>
+        <h4 class="alert-title">Secure Checkout</h4>
+        <p class="alert-text mb-3">You are booking <strong>{{ payingTrek.name }}</strong> for <strong>{{ payingTrek.price }}</strong>.</p>
+        
+        <div class="p-3 rounded-3 bg-light border mb-4 text-start">
+          <div class="d-flex align-items-center justify-content-between mb-2">
+            <span class="text-xs text-muted" style="font-weight: 700; text-transform: uppercase;">Payment Method</span>
+            <span class="badge bg-success text-xs">Simulated</span>
+          </div>
+          <div class="d-flex align-items-center gap-2">
+            <i class="bi bi-credit-card-2-back text-orange fs-4"></i>
+            <span class="text-sm fw-semibold">TrekMate Secure Payment Wallet</span>
+          </div>
+        </div>
+
+        <div class="d-flex gap-2">
+          <button class="btn btn-secondary-outline w-50 py-2 text-xs" @click="payingTrek = null">Cancel</button>
+          <button class="btn btn-primary-accent w-50 py-2 text-xs" @click="confirmPaymentAndBook">Pay Now</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Premium Alert Modal -->
+    <div v-if="alertMessage" class="premium-alert-overlay" @click="closeAlert">
+      <div class="premium-alert-box" @click.stop>
+        <div class="alert-icon" :class="alertType">
+          <span v-if="alertType === 'success'">🎉</span>
+          <span v-else>⚠️</span>
+        </div>
+        <h4 class="alert-title">{{ alertType === 'success' ? 'Success' : 'Message' }}</h4>
+        <p class="alert-text">{{ alertMessage }}</p>
+        <button class="btn btn-primary-accent w-100 mt-2" @click="closeAlert">OK</button>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -112,25 +228,24 @@ import DashboardTab from '../components/dashboard/DashboardTab.vue'
 import ExploreTab from '../components/dashboard/ExploreTab.vue'
 import ProfileTab from '../components/dashboard/ProfileTab.vue'
 import BookingsTab from '../components/dashboard/BookingsTab.vue'
+import HistoryTab from '../components/dashboard/HistoryTab.vue'
 
 // Active Tab
 const activeTab = ref('dashboard')
 const router = useRouter()
 
-const myBookingsList = ref([
-  {
-    trekName: 'Kedarkantha Trek',
-    bookingDate: '10 May 2026',
-    trekDates: '15 May - 20 May 2026',
-    status: 'Booked'
-  },
-  {
-    trekName: 'Valley of Flowers',
-    bookingDate: '12 June 2026',
-    trekDates: '05 July - 10 July 2026',
-    status: 'Completed'
-  }
-])
+const myBookingsList = ref([])
+const selectedTrek = ref(null)
+const payingTrek = ref(null)
+
+// Alert state
+const alertMessage = ref('')
+const alertType = ref('success')
+
+const closeAlert = () => {
+  alertMessage.value = ''
+}
+
 
 // Profile variables
 const profileName = ref('')
@@ -187,7 +302,7 @@ const selectTab = (tabId) => {
 
 // Page title and subtitle helpers
 const pageTitle = computed(() => {
-  if (activeTab.value === 'dashboard') return `Good Morning, ${profileName.value || 'Ridhi'} 👋`
+  if (activeTab.value === 'dashboard') return `Good Morning, ${profileName.value || 'Ridhi'}`
   if (activeTab.value === 'explore') return 'Browse Treks'
   return getTabName(activeTab.value)
 })
@@ -206,11 +321,11 @@ const getTabName = (tabId) => {
 
 // Navigation Items
 const navItems = [
-  { id: 'dashboard', name: 'Dashboard', icon: '🏠' },
-  { id: 'explore', name: 'Browse Treks', icon: '🥾' },
-  { id: 'bookings', name: 'My Bookings', icon: '📅' },
-  { id: 'history', name: 'History', icon: '🧾' },
-  { id: 'profile', name: 'Profile', icon: '👤' },
+  { id: 'dashboard', name: 'Dashboard', icon: '<i class="bi bi-grid"></i>' },
+  { id: 'explore', name: 'Browse Treks', icon: '<i class="bi bi-compass"></i>' },
+  { id: 'bookings', name: 'My Bookings', icon: '<i class="bi bi-journal-check"></i>' },
+  { id: 'history', name: 'History', icon: '<i class="bi bi-clock-history"></i>' },
+  { id: 'profile', name: 'Profile', icon: '<i class="bi bi-person"></i>' },
 ]
 
 // Stats Cards data
@@ -246,75 +361,106 @@ const stats = [
 ]
 
 // Master Treks list
-const treksList = [
-  {
-    name: 'Everest Base Camp',
-    location: 'Nepal',
-    difficulty: 'Hard',
-    duration: '12 Days',
-    slots: 8,
-    price: '₹48,000',
-    image: 'https://images.unsplash.com/photo-1544735716-392fe2489ffa?w=600&q=80'
-  },
-  {
-    name: 'Roopkund Trek',
-    location: 'Uttarakhand',
-    difficulty: 'Moderate',
-    duration: '7 Days',
-    slots: 7,
-    price: '₹12,500',
-    image: 'https://images.unsplash.com/photo-1454496522488-7a8e488e8606?w=600&q=80'
-  },
-  {
-    name: 'Hampta Pass',
-    location: 'Himachal',
-    difficulty: 'Moderate',
-    duration: '5 Days',
-    slots: 0,
-    price: '₹9,800',
-    image: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=600&q=80'
-  },
-  {
-    name: 'Valley of Flowers',
-    location: 'Uttarakhand',
-    difficulty: 'Easy',
-    duration: '6 Days',
-    slots: 15,
-    price: '₹14,500',
-    image: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=600&q=80'
-  },
-  {
-    name: 'Goechala Trek',
-    location: 'Sikkim',
-    difficulty: 'Hard',
-    duration: '11 Days',
-    slots: 4,
-    price: '₹22,000',
-    image: 'https://images.unsplash.com/photo-1486915309851-b0cc1f8a0084?w=600&q=80'
-  },
-  {
-    name: 'Kedarkantha Trek',
-    location: 'Uttarakhand',
-    difficulty: 'Moderate',
-    duration: '6 Days',
-    slots: 10,
-    price: '₹9,500',
-    image: 'https://images.unsplash.com/photo-1501555088652-021faa106b9b?w=600&q=80'
+const treksList = ref([])
+
+const fetchTreks = async () => {
+  try {
+    const response = await api.get('/treks')
+    if (response.data && response.data.success) {
+      treksList.value = response.data.data
+    }
+  } catch (error) {
+    console.error('Error fetching treks:', error)
   }
-]
+}
+
+// Fetch user bookings
+const fetchBookings = async () => {
+  const token = localStorage.getItem('access_token')
+  if (!token) return
+  
+  try {
+    const response = await api.get('/bookings', {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    })
+    if (response.data && response.data.success) {
+      myBookingsList.value = response.data.data
+    }
+  } catch (error) {
+    console.error('Error fetching user bookings:', error)
+  }
+}
+
+// Book a trek
+const bookTrek = async (trekId) => {
+  const token = localStorage.getItem('access_token')
+  if (!token) {
+    alertType.value = 'error'
+    alertMessage.value = 'Please log in to book a trek.'
+    router.push('/auth/login')
+    return
+  }
+  
+  const trek = treksList.value.find(t => t.id === trekId)
+  if (trek) {
+    payingTrek.value = trek
+  }
+}
+
+// Confirm checkout and pay
+const confirmPaymentAndBook = async () => {
+  if (!payingTrek.value) return
+  
+  const token = localStorage.getItem('access_token')
+  const trekId = payingTrek.value.id
+  payingTrek.value = null // close payment modal
+  
+  try {
+    const response = await api.post('/bookings', {
+      trek_id: trekId
+    }, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    })
+    
+    if (response.data && response.data.success) {
+      alertType.value = 'success'
+      alertMessage.value = 'Payment Successful! Booking request sent to admin for approval. 🎉'
+      
+      // Update stats and lists reactively
+      await fetchTreks()
+      await fetchBookings()
+    }
+  } catch (error) {
+    alertType.value = 'error'
+    if (error.response && error.response.data && error.response.data.message) {
+      alertMessage.value = error.response.data.message
+    } else {
+      alertMessage.value = 'Failed to process payment. Please try again.'
+    }
+  }
+}
 
 // Filtered treks specifically for the dashboard (first 3 matching items)
 const dashboardFilteredTreks = computed(() => {
-  return treksList.filter(trek => {
+  return treksList.value.filter(trek => {
     const matchesDiff = difficultyFilter.value === 'All' || trek.difficulty === difficultyFilter.value
     const matchesLoc = locationFilter.value === 'All' || trek.location === locationFilter.value
     return matchesDiff && matchesLoc
   }).slice(0, 3)
 })
 
+// Compute history list from completed bookings
+const historyList = computed(() => {
+  return myBookingsList.value.filter(b => b.status === 'Completed')
+})
+
 // Filtering logic
 const filteredTreks = computed(() => {
-  return treksList.filter(trek => {
+  return treksList.value.filter(trek => {
     const matchesSearch = trek.name.toLowerCase().includes(searchQuery.value.toLowerCase()) || 
                           trek.location.toLowerCase().includes(searchQuery.value.toLowerCase())
     const matchesDiff = difficultyFilter.value === 'All' || trek.difficulty === difficultyFilter.value
@@ -410,10 +556,17 @@ const saveProfile = async () => {
   }
 }
 
-// Watch tab change to fetch profile
+// Watch tab change to fetch profile, treks, or bookings
 watch(activeTab, (newTab) => {
   if (newTab === 'profile') {
     fetchProfile()
+  }
+  if (newTab === 'explore' || newTab === 'dashboard') {
+    fetchTreks()
+    fetchBookings()
+  }
+  if (newTab === 'bookings') {
+    fetchBookings()
   }
 })
 
@@ -430,10 +583,15 @@ onMounted(() => {
     }
   }
   fetchProfile()
+  fetchTreks()
+  fetchBookings()
 })
 
 const viewTrekDetails = (trekName) => {
-  alert(`Viewing details for: ${trekName}`)
+  const trek = treksList.value.find(t => t.name === trekName)
+  if (trek) {
+    selectedTrek.value = trek
+  }
 }
 
 const handleLogout = () => {
@@ -541,5 +699,176 @@ const handleLogout = () => {
 .btn-primary-accent:hover {
   opacity: 0.9;
   color: #FFFFFF;
+}
+
+/* Premium Alert Modal Styles */
+.premium-alert-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(15, 23, 42, 0.4);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.premium-alert-box {
+  background-color: var(--color-card);
+  border: 1px solid var(--color-border);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+  border-radius: 16px;
+  width: 90%;
+  max-width: 400px;
+  padding: 2rem;
+  text-align: center;
+  animation: slide-up-alert 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+@keyframes slide-up-alert {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.alert-icon {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.alert-icon.success {
+  background-color: #E6FDF4;
+}
+
+.alert-icon.error {
+  background-color: #FEE2E2;
+}
+
+.alert-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  color: var(--color-text-primary);
+}
+
+.alert-text {
+  font-size: 0.95rem;
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+  margin-bottom: 1.5rem;
+}
+
+/* Premium Trek Details Modal Styles */
+.premium-details-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9990;
+  padding: 1.5rem;
+}
+
+.premium-details-card {
+  background-color: var(--color-card);
+  border: 1px solid var(--color-border);
+  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.2);
+  border-radius: 20px;
+  width: 100%;
+  max-width: 480px;
+  overflow: hidden;
+  position: relative;
+  animation: scale-up-details 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+@keyframes scale-up-details {
+  from {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.close-btn {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: rgba(15, 23, 42, 0.6);
+  border: none;
+  color: white;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.close-btn:hover {
+  background: rgba(15, 23, 42, 0.8);
+}
+
+.details-image-wrapper {
+  position: relative;
+  height: 200px;
+  width: 100%;
+}
+
+.details-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.details-image-wrapper .difficulty-badge {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  color: white;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.35rem 0.75rem;
+  border-radius: 50px;
+  text-transform: uppercase;
+}
+
+.difficulty-badge.easy { background-color: #10B981; }
+.difficulty-badge.moderate { background-color: #F59E0B; color: #1F2937; }
+.difficulty-badge.hard { background-color: #EF4444; }
+.difficulty-badge.difficult { background-color: #EF4444; }
+
+.info-card {
+  border: 1px solid var(--color-border);
+}
+
+.line-height-15 {
+  line-height: 1.6;
 }
 </style>

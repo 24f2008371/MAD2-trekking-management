@@ -55,13 +55,13 @@
               <!-- Action Buttons -->
               <div class="row g-2">
                 <div class="col-6">
-                  <button class="btn btn-outline-navy w-100 btn-view-details rounded-pill font-heading text-xs py-2">
+                  <button @click="handleShowMore" class="btn btn-outline-navy w-100 btn-view-details rounded-pill font-heading text-xs py-2">
                     View Details
                   </button>
                 </div>
                 <div class="col-6">
-                  <button class="btn btn-premium-orange w-100 btn-book-now rounded-pill font-heading text-xs py-2">
-                    Book Now
+                  <button @click="handleBookNow(trek)" :class="['btn w-100 btn-book-now rounded-pill font-heading text-xs py-2', getTrekBtnClass(trek)]">
+                    {{ getTrekBtnText(trek) }}
                   </button>
                 </div>
               </div>
@@ -69,79 +69,117 @@
           </div>
         </div>
       </div>
+
+      <!-- Show More Button -->
+      <div class="text-center mt-5">
+        <button @click="handleShowMore" class="btn btn-premium-orange px-5 py-3 rounded-pill font-heading shadow-md">
+          Show More <i class="bi bi-chevron-right ms-1"></i>
+        </button>
+      </div>
     </div>
   </section>
 </template>
 
 <script setup>
-import { ref } from 'vue'
-import trek1Img from '../assets/images/trek_1.png'
-import trek2Img from '../assets/images/trek_2.png'
-import trek3Img from '../assets/images/trek_3.png'
-import trek4Img from '../assets/images/trek_4.png'
+import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import api from '../api/api.js'
 
-const treks = ref([
-  {
-    id: 1,
-    name: 'Kedarkantha Winter Expedition',
-    location: 'Garhwal Himalayas, Uttarakhand',
-    difficulty: 'Easy-Moderate',
-    duration: '6 Days',
-    slots: 8,
-    price: '₹8,500',
-    image: trek1Img
-  },
-  {
-    id: 2,
-    name: 'Roopkund Lake Trail',
-    location: 'Chamoli District, Uttarakhand',
-    difficulty: 'Hard',
-    duration: '8 Days',
-    slots: 5,
-    price: '₹14,200',
-    image: trek2Img
-  },
-  {
-    id: 3,
-    name: 'Valley of Flowers Trek',
-    location: 'West Himalayas, Uttarakhand',
-    difficulty: 'Easy',
-    duration: '6 Days',
-    slots: 12,
-    price: '₹9,800',
-    image: trek3Img
-  },
-  {
-    id: 4,
-    name: 'Hampta Pass Crossing',
-    location: 'Manali, Himachal Pradesh',
-    difficulty: 'Moderate',
-    duration: '5 Days',
-    slots: 6,
-    price: '₹10,500',
-    image: trek4Img
-  },
-  {
-    id: 5,
-    name: 'Annapurna Base Camp',
-    location: 'Gandaki Province, Nepal',
-    difficulty: 'Hard',
-    duration: '11 Days',
-    slots: 4,
-    price: '₹32,000',
-    image: trek2Img
-  },
-  {
-    id: 6,
-    name: 'Har Ki Dun Valley',
-    location: 'Uttarkashi, Uttarakhand',
-    difficulty: 'Easy-Moderate',
-    duration: '7 Days',
-    slots: 10,
-    price: '₹11,000',
-    image: trek1Img
+const router = useRouter()
+const treks = ref([])
+const myBookings = ref([])
+
+const fetchTreks = async () => {
+  try {
+    const response = await api.get('/treks')
+    if (response.data && response.data.success) {
+      // Get top 6 treks
+      treks.value = response.data.data.slice(0, 6)
+    }
+  } catch (error) {
+    console.error('Error fetching popular treks:', error)
   }
-])
+}
+
+const fetchMyBookings = async () => {
+  if (!localStorage.getItem('access_token')) return
+  try {
+    const response = await api.get('/bookings')
+    if (response.data && response.data.success) {
+      myBookings.value = response.data.data
+    }
+  } catch (error) {
+    console.error('Error fetching user bookings:', error)
+  }
+}
+
+const getTrekBookingStatus = (trekId) => {
+  const booking = myBookings.value.find(b => b.trekId === trekId && b.status !== 'Cancelled')
+  return booking ? booking.status : null
+}
+
+const hasClashingBooking = (trek) => {
+  return myBookings.value.some(b => b.startDate === trek.start_date && b.status !== 'Cancelled' && b.trekId !== trek.id)
+}
+
+const getTrekBtnText = (trek) => {
+  if (trek.status === 'Closed') return 'Closed'
+  if (trek.status === 'Completed') return 'Completed'
+  const status = getTrekBookingStatus(trek.id)
+  if (status === 'Pending') return 'Pending'
+  if (status === 'Confirmed' || status === 'Booked') return 'Booked'
+  if (hasClashingBooking(trek)) return 'Date Clash'
+  return trek.slots > 0 ? 'Book Now' : 'Full'
+}
+
+const getTrekBtnClass = (trek) => {
+  if (trek.status === 'Closed' || trek.status === 'Completed') return 'btn-secondary text-white border-0 disabled'
+  const status = getTrekBookingStatus(trek.id)
+  if (status === 'Pending') return 'bg-warning text-dark border-0 disabled'
+  if (status === 'Confirmed' || status === 'Booked') return 'bg-success text-white border-0 disabled'
+  if (hasClashingBooking(trek)) return 'bg-danger text-white border-0 disabled'
+  return trek.slots > 0 ? 'btn-premium-orange' : 'btn-secondary text-white border-0 disabled'
+}
+
+const handleBookNow = (trek) => {
+  const token = localStorage.getItem('access_token')
+  if (!token) {
+    router.push('/auth/login')
+    return
+  }
+  const status = getTrekBookingStatus(trek.id)
+  if (status || hasClashingBooking(trek) || trek.status === 'Closed' || trek.status === 'Completed' || trek.slots <= 0) {
+    return // Already booked/disabled
+  }
+  router.push('/dashboard')
+}
+
+const handleShowMore = () => {
+  const token = localStorage.getItem('access_token')
+  const userJson = localStorage.getItem('user')
+  
+  if (token && userJson) {
+    try {
+      const user = JSON.parse(userJson)
+      if (user.role === 'admin') {
+        router.push('/admin/dashboard')
+      } else if (user.role === 'staff') {
+        router.push('/staff/dashboard')
+      } else {
+        router.push('/dashboard')
+      }
+    } catch (e) {
+      router.push('/auth/login')
+    }
+  } else {
+    router.push('/auth/login')
+  }
+}
+
+onMounted(() => {
+  fetchTreks()
+  fetchMyBookings()
+})
 
 const difficultyClass = (diff) => {
   if (diff === 'Easy') return 'bg-success text-white'

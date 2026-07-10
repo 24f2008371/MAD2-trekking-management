@@ -153,19 +153,7 @@ const validateEmail = () => {
 }
 
 const validatePhone = () => {
-
-  if (!phone.value) {
-    phoneErr.value = 'Phone number is required'
-    return false
-  }
-
-  const digits = phone.value.replace(/[\s()+-]/g, '')
-
-  if (digits.length < 1) {
-    phoneErr.value = 'Phone number is required'
-    return false
-  }
-
+  // Phone number is optional, so it is valid when empty
   phoneErr.value = ''
   return true
 }

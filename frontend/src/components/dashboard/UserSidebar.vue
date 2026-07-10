@@ -2,7 +2,7 @@
   <aside class="sidebar">
     <router-link to="/" class="sidebar-brand text-decoration-none">
       <span class="logo-text">Trek<span class="orange-text">Mate</span></span>
-      <span class="logo-dot"></span>
+      <span class="logo-badge">User</span>
     </router-link>
 
     <nav class="sidebar-nav">
@@ -21,7 +21,7 @@
 
     <div class="sidebar-footer">
       <a href="#" class="nav-item logout-btn" @click.prevent="$emit('logout')">
-        <span class="nav-icon">🚪</span>
+        <span class="nav-icon"><i class="bi bi-box-arrow-right"></i></span>
         <span class="nav-label">Logout</span>
       </a>
     </div>
@@ -78,12 +78,15 @@ defineEmits(['select-tab', 'logout'])
   color: var(--color-accent);
 }
 
-.logo-dot {
-  width: 6px;
-  height: 6px;
-  background-color: var(--color-accent);
-  border-radius: 50%;
-  margin-top: 0.25rem;
+.logo-badge {
+  font-size: 0.65rem;
+  font-weight: 700;
+  background-color: var(--color-accent-light);
+  color: var(--color-accent);
+  padding: 0.15rem 0.4rem;
+  border-radius: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 .sidebar-nav {

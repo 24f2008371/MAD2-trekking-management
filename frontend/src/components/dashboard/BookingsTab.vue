@@ -6,7 +6,12 @@
         <span class="badge bg-light text-dark border">{{ myBookingsList.length }} Bookings</span>
       </div>
 
-      <div class="table-responsive">
+      <div v-if="myBookingsList.length === 0" class="text-center py-5">
+        <span class="fs-1 d-block mb-3">📅</span>
+        <h4 class="text-muted">No bookings found</h4>
+        <p class="text-secondary text-sm mb-0">You haven't booked any expeditions yet. Go to the Browse Treks section to book one!</p>
+      </div>
+      <div v-else class="table-responsive">
         <table class="table table-custom align-middle">
           <thead>
             <tr>
@@ -18,12 +23,12 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="booking in myBookingsList" :key="booking.trekName">
+            <tr v-for="booking in myBookingsList" :key="booking.id || booking.trekName">
               <td class="fw-bold text-dark">{{ booking.trekName }}</td>
               <td class="text-secondary">{{ booking.bookingDate }}</td>
               <td class="text-secondary">{{ booking.trekDates }}</td>
               <td>
-                <span :class="booking.status === 'Booked' ? 'status-badge-blue' : 'status-badge-green'">
+                <span :class="getStatusClass(booking.status)">
                   {{ booking.status }}
                 </span>
               </td>
@@ -49,6 +54,13 @@ defineProps({
 })
 
 defineEmits(['view-details'])
+
+const getStatusClass = (status) => {
+  if (status === 'Pending') return 'status-badge-orange'
+  if (status === 'Cancelled') return 'status-badge-red'
+  if (status === 'Confirmed' || status === 'Booked') return 'status-badge-green'
+  return 'status-badge-blue'
+}
 </script>
 
 <style scoped>
@@ -61,7 +73,7 @@ defineEmits(['view-details'])
 .bookings-table-card {
   background-color: var(--color-card);
   border: 1px solid var(--color-border);
-  border-radius: 14px;
+  box-radius: 14px;
   padding: 1.5rem;
 }
 
@@ -102,6 +114,24 @@ defineEmits(['view-details'])
 .status-badge-green {
   background-color: #E6FDF4;
   color: #10B981;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.25rem 0.65rem;
+  border-radius: 6px;
+}
+
+.status-badge-orange {
+  background-color: #FFF3CD;
+  color: #856404;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.25rem 0.65rem;
+  border-radius: 6px;
+}
+
+.status-badge-red {
+  background-color: #F8D7DA;
+  color: #721C24;
   font-size: 0.75rem;
   font-weight: 600;
   padding: 0.25rem 0.65rem;

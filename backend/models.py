@@ -8,9 +8,11 @@ class User(db.Model):
     username = db.Column(db.String(40), unique = True, nullable = False)
     email = db.Column(db.String(80), unique = True, nullable = False)
     password = db.Column(db.String(200), nullable = False)
-    phone = db.Column(db.String(15), nullable = False)
+    phone = db.Column(db.String(15), nullable = True)
     role = db.Column(db.String(20), nullable = False, default = "user") 
     status = db.Column(db.String(20), nullable = False, default = "active")
+    experience = db.Column(db.String(100), nullable = True)
+    specialization = db.Column(db.String(100), nullable = True)
 
     managed_treks = db.relationship("Trek", back_populates = "staff", lazy = True)
     bookings = db.relationship("Booking", back_populates = "user", lazy = True)
