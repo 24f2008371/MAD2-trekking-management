@@ -11,10 +11,33 @@
       </div>
     </div>
     <div class="top-bar-actions">
-      <button class="notification-btn" aria-label="Notifications">
-        <i class="bi bi-bell"></i>
-        <span class="notification-badge"></span>
-      </button>
+      <div class="notification-wrapper" @click="toggleNotifications" v-click-outside="closeNotifications">
+        <button class="notification-btn" aria-label="Notifications">
+          <i class="bi bi-bell"></i>
+          <span v-if="unreadCount > 0" class="notification-badge">{{ unreadCount }}</span>
+        </button>
+        <transition name="slide-fade">
+          <div v-if="notificationsOpen" class="notification-panel">
+            <div class="notif-header">
+              <span class="notif-title">Admin Alerts</span>
+              <span v-if="unreadCount > 0" class="notif-count">{{ unreadCount }} pending</span>
+            </div>
+            <div class="notif-list" v-if="notifications.length > 0">
+              <div v-for="notif in notifications" :key="notif.id" class="notif-item" :class="{ unread: !notif.read }">
+                <i class="bi bi-clock-fill text-warning"></i>
+                <div class="notif-content">
+                  <p class="notif-text"><strong>{{ notif.username }}</strong> requested booking for <strong>{{ notif.trek }}</strong></p>
+                  <span class="notif-time">{{ notif.time }}</span>
+                </div>
+              </div>
+            </div>
+            <div v-else class="notif-empty">
+              <i class="bi bi-check2-all text-success"></i>
+              <p>All bookings cleared!</p>
+            </div>
+          </div>
+        </transition>
+      </div>
       
       <div class="profile-dropdown" @click="toggleDropdown" v-click-outside="closeDropdown">
         <div class="profile-trigger">
@@ -35,7 +58,8 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted, computed } from 'vue'
+import api from '../../api/api.js'
 
 defineProps({
   pageTitle: {
@@ -59,12 +83,53 @@ defineProps({
 defineEmits(['logout', 'toggle-sidebar'])
 
 const dropdownOpen = ref(false)
+const notificationsOpen = ref(false)
+const notifications = ref([])
+
+const unreadCount = computed(() => notifications.value.filter(n => !n.read).length)
+
 const toggleDropdown = () => {
   dropdownOpen.value = !dropdownOpen.value
+  notificationsOpen.value = false
 }
 const closeDropdown = () => {
   dropdownOpen.value = false
 }
+
+const toggleNotifications = () => {
+  notificationsOpen.value = !notificationsOpen.value
+  dropdownOpen.value = false
+  if (notificationsOpen.value) {
+    notifications.value.forEach(n => n.read = true)
+  }
+}
+const closeNotifications = () => {
+  notificationsOpen.value = false
+}
+
+const fetchAdminNotifications = async () => {
+  try {
+    const response = await api.get('/admin/bookings')
+    if (response.data && response.data.success) {
+      const bookings = response.data.data
+      // Filter for pending bookings that require admin action
+      const pendingBookings = bookings.filter(b => b.status === 'Pending')
+      notifications.value = pendingBookings.slice(0, 5).map((b, i) => ({
+        id: b.id || i,
+        username: b.user || 'User',
+        trek: b.trek || 'Trek',
+        time: b.date || 'Today',
+        read: false
+      }))
+    }
+  } catch (error) {
+    console.error('Error fetching admin notifications:', error)
+  }
+}
+
+onMounted(() => {
+  fetchAdminNotifications()
+})
 
 // Custom directive for clicking outside dropdown
 const vClickOutside = {
@@ -102,6 +167,7 @@ const vClickOutside = {
   color: #1f2937;
   font-size: 1.25rem;
   transition: all 0.2s ease;
+  cursor: pointer;
 }
 
 .toggle-sidebar-btn:hover {
@@ -130,6 +196,10 @@ const vClickOutside = {
   gap: 1.25rem;
 }
 
+.notification-wrapper {
+  position: relative;
+}
+
 .notification-btn {
   background: transparent;
   border: 1px solid #eaeaea;
@@ -143,6 +213,7 @@ const vClickOutside = {
   font-size: 1.15rem;
   position: relative;
   transition: all 0.2s ease;
+  cursor: pointer;
 }
 
 .notification-btn:hover {
@@ -153,13 +224,122 @@ const vClickOutside = {
 
 .notification-badge {
   position: absolute;
-  top: 10px;
-  right: 10px;
-  width: 8px;
-  height: 8px;
+  top: 6px;
+  right: 6px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
   background-color: #ff6b35;
-  border-radius: 50%;
-  border: 1.5px solid #ffffff;
+  border-radius: 20px;
+  border: 2px solid #ffffff;
+  font-size: 0.6rem;
+  font-weight: 700;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.notification-panel {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 10px);
+  width: 320px;
+  background-color: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.1);
+  z-index: 200;
+  overflow: hidden;
+}
+
+.notif-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 16px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.notif-title {
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: #111827;
+}
+
+.notif-count {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #ffffff;
+  background: #ff6b35;
+  padding: 2px 8px;
+  border-radius: 20px;
+}
+
+.notif-list {
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+.notif-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 16px;
+  border-bottom: 1px solid #f9fafb;
+  transition: background 0.15s ease;
+}
+
+.notif-item:last-child {
+  border-bottom: none;
+}
+
+.notif-item.unread {
+  background: #fffbf7;
+}
+
+.notif-item:hover {
+  background: #f8fafc;
+}
+
+.notif-item > i {
+  font-size: 1.1rem;
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+
+.notif-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.notif-text {
+  font-size: 0.8rem;
+  color: #334155;
+  margin: 0 0 3px 0;
+  line-height: 1.35;
+}
+
+.notif-time {
+  font-size: 0.7rem;
+  color: #94a3b8;
+}
+
+.notif-empty {
+  padding: 30px 16px;
+  text-align: center;
+  color: #94a3b8;
+}
+
+.notif-empty i {
+  font-size: 1.8rem;
+  display: block;
+  margin-bottom: 8px;
+}
+
+.notif-empty p {
+  font-size: 0.85rem;
+  margin: 0;
 }
 
 .profile-dropdown {

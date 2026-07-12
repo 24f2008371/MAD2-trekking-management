@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Monthly Trekking Summary</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background-color: #f8fafc;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 600px;
+            background-color: #ffffff;
+            margin: 0 auto;
+            padding: 0;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(15, 23, 42, 0.08);
+            border: 1px solid #e2e8f0;
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
+            padding: 28px 24px;
+            text-align: center;
+        }
+        .header h1 {
+            color: #ffffff;
+            font-size: 22px;
+            margin: 0 0 4px 0;
+            letter-spacing: 0.5px;
+        }
+        .header p {
+            color: #94a3b8;
+            font-size: 13px;
+            margin: 0;
+        }
+        .body-content {
+            padding: 24px;
+        }
+        .welcome {
+            font-size: 15px;
+            color: #334155;
+            margin-bottom: 6px;
+        }
+        .intro {
+            font-size: 14px;
+            color: #64748b;
+            margin-bottom: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        th, td {
+            text-align: left;
+            padding: 10px 12px;
+            font-size: 13px;
+        }
+        th {
+            background-color: #0F172A;
+            color: #ffffff;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 11px;
+            letter-spacing: 0.05em;
+        }
+        td {
+            border-bottom: 1px solid #f1f5f9;
+            color: #334155;
+        }
+        tr:last-child td {
+            border-bottom: none;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        .no-bookings {
+            text-align: center;
+            padding: 30px 20px;
+            color: #94a3b8;
+            font-size: 14px;
+        }
+        .no-bookings i {
+            font-size: 36px;
+            display: block;
+            margin-bottom: 10px;
+        }
+        .footer {
+            background-color: #f8fafc;
+            padding: 16px 24px;
+            text-align: center;
+            font-size: 11px;
+            color: #94a3b8;
+            border-top: 1px solid #e2e8f0;
+        }
+        .footer a {
+            color: #FF6B35;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>TrekMate</h1>
+            <p>Your Monthly Trekking Summary</p>
+        </div>
+        <div class="body-content">
+            <p class="welcome">Hi <strong>{{ username }}</strong>,</p>
+            <p class="intro">Here is a summary of your trekking activity this month. Keep exploring!</p>
+            
+            {% if transactions %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Trek</th>
+                        <th>Location</th>
+                        <th>Start Date</th>
+                        <th>Status</th>
+                        <th>Price</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for t in transactions %}
+                    <tr>
+                        <td><strong>{{ t.name }}</strong></td>
+                        <td>{{ t.source }}</td>
+                        <td>{{ t.delivery }}</td>
+                        <td>{{ t.type }}</td>
+                        <td>&#8377;{{ t.amount }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div class="no-bookings">
+                <p>You have no bookings recorded for this month.</p>
+                <p>Time to plan your next adventure!</p>
+            </div>
+            {% endif %}
+        </div>
+        <div class="footer">
+            TrekMate &copy; 2026 Trekking Management. All rights reserved.
+        </div>
+    </div>
+</body>
+</html>

@@ -294,7 +294,18 @@ def admin_update_booking_status(b_id):
         
     booking.status = new_status
     db.session.commit()
+    try:
+        from celery_config import celery_app
+        celery_app.send_task('delivery_update', args=[
+            booking.user.username,
+            booking.trek.name,
+            f"TM-{booking.id}",
+            new_status
+        ])
+    except Exception as e:
+        print(f"Failed to queue delivery update task: {e}")
     return jsonify({"success": True, "message": f"Booking status updated to {new_status}"}), 200
+
 
 @api_bp.route('/api/admin/search', methods=['GET'])
 @jwt_required()
@@ -406,7 +417,7 @@ def user_bookings():
             "trekDates": f"{b.trek.start_date.strftime('%d %b')} - {b.trek.end_date.strftime('%d %b %Y')}" if b.trek.start_date and b.trek.end_date else '',
             "startDate": b.trek.start_date.strftime('%Y-%m-%d') if b.trek.start_date else '',
             "completedOn": b.trek.end_date.strftime('%d %b %Y') if b.trek.end_date else '',
-            "status": 'Completed' if (b.status in ['Confirmed', 'Booked'] and b.trek.end_date and b.trek.end_date < date.today()) else b.status
+            "status": 'Completed' if (b.status in ['Confirmed', 'Booked', 'Completed'] and (b.trek.status == 'Completed' or (b.trek.end_date and b.trek.end_date < date.today()))) else b.status
         } for b in bookings]}), 200
 
     data = request.get_json()
@@ -492,3 +503,43 @@ def staff_update_trek_status(t_id):
     trek.status = new_status
     db.session.commit()
     return jsonify({"success": True, "message": f"Trek status updated to {new_status}"}), 200
+
+# ================= CELERY REPORT ROUTES =================
+
+@api_bp.route('/api/admin/export-csv', methods=['POST'])
+@jwt_required()
+@role_required('admin')
+def admin_export_csv():
+    try:
+        from celery_config import celery_app
+        task = celery_app.send_task('download_csv_report')
+        return jsonify({"success": True, "task_id": task.id}), 202
+    except Exception as e:
+        return jsonify({"success": False, "message": f"Failed to start export task: {str(e)}"}), 500
+
+@api_bp.route('/api/admin/task-status/<task_id>', methods=['GET'])
+@jwt_required()
+@role_required('admin')
+def admin_task_status(task_id):
+    try:
+        from celery_config import celery_app
+        res = celery_app.AsyncResult(task_id)
+        if res.state == 'SUCCESS':
+            return jsonify({"success": True, "status": res.state, "result": res.result}), 200
+        elif res.state == 'FAILURE':
+            return jsonify({"success": False, "status": res.state, "message": str(res.info)}), 500
+        return jsonify({"success": True, "status": res.state}), 200
+    except Exception as e:
+        return jsonify({"success": False, "message": f"Error checking task status: {str(e)}"}), 500
+
+@api_bp.route('/api/admin/trigger-monthly-report', methods=['POST'])
+@jwt_required()
+@role_required('admin')
+def admin_trigger_monthly_report():
+    try:
+        from celery_config import celery_app
+        task = celery_app.send_task('monthly_report')
+        return jsonify({"success": True, "message": "Monthly reports task triggered", "task_id": task.id}), 202
+    except Exception as e:
+        return jsonify({"success": False, "message": f"Failed to start monthly report task: {str(e)}"}), 500
+

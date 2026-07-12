@@ -1,9 +1,25 @@
 <template>
   <div class="admin-page py-4">
-    <div class="mb-4">
-      <h4 class="page-title mb-1">Reports & Analytics</h4>
-      <p class="page-subtitle text-muted mb-0">Track bookings revenue, guide allocation, and trek popularity</p>
+    <div class="mb-4 d-flex justify-content-between align-items-center flex-wrap gap-2">
+      <div>
+        <h4 class="page-title mb-1">Reports & Analytics</h4>
+        <p class="page-subtitle text-muted mb-0">Track bookings revenue, guide allocation, and trek popularity</p>
+      </div>
+      <div class="d-flex gap-2">
+        <button class="btn-report btn-report-outline" @click="exportCSV" :disabled="exporting">
+          <span v-if="exporting" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+          <i v-else class="bi bi-file-earmark-spreadsheet"></i>
+          {{ exporting ? 'Exporting...' : 'Export Bookings CSV' }}
+        </button>
+        <button class="btn-report btn-report-filled" @click="triggerMonthlyReports" :disabled="sendingReports">
+          <span v-if="sendingReports" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+          <i v-else class="bi bi-envelope"></i>
+          {{ sendingReports ? 'Sending...' : 'Send Monthly Reports' }}
+        </button>
+      </div>
     </div>
+
+
 
     <!-- Quick stats indicators -->
     <div class="row g-4 mb-4">
@@ -94,6 +110,71 @@ const reportsData = ref({
   }
 })
 
+const exporting = ref(false)
+const sendingReports = ref(false)
+
+const exportCSV = async () => {
+  exporting.value = true
+  try {
+    const response = await api.post('/admin/export-csv')
+    if (response.data && response.data.success) {
+      const taskId = response.data.task_id
+      pollExportStatus(taskId)
+    } else {
+      alert('Failed to trigger export: ' + (response.data.message || 'Unknown error'))
+      exporting.value = false
+    }
+  } catch (error) {
+    console.error('Error triggering export:', error)
+    alert('Error triggering export')
+    exporting.value = false
+  }
+}
+
+const pollExportStatus = async (taskId) => {
+  try {
+    const response = await api.get(`/admin/task-status/${taskId}`)
+    if (response.data && response.data.success) {
+      if (response.data.status === 'SUCCESS') {
+        const filename = response.data.result
+        // Download file from the backend's static directory
+        window.open(`http://127.0.0.1:5000/static/${filename}`, '_blank')
+        exporting.value = false
+      } else if (response.data.status === 'FAILURE') {
+        alert('Export failed: ' + (response.data.message || 'Unknown error'))
+        exporting.value = false
+      } else {
+        // Poll again after 1.5 seconds
+        setTimeout(() => pollExportStatus(taskId), 1500)
+      }
+    } else {
+      alert('Error checking status')
+      exporting.value = false
+    }
+  } catch (error) {
+    console.error('Error polling export status:', error)
+    exporting.value = false
+  }
+}
+
+const triggerMonthlyReports = async () => {
+  sendingReports.value = true
+  try {
+    const response = await api.post('/admin/trigger-monthly-report')
+    if (response.data && response.data.success) {
+      alert('Monthly reports task has been successfully triggered!')
+    } else {
+      alert('Failed to send reports: ' + (response.data.message || 'Unknown error'))
+    }
+  } catch (error) {
+    console.error('Error triggering monthly reports:', error)
+    alert('Error triggering monthly reports')
+  } finally {
+    sendingReports.value = false
+  }
+}
+
+
 const fetchReports = async () => {
   try {
     const response = await api.get('/admin/reports')
@@ -183,5 +264,48 @@ onMounted(() => {
   height: 100%;
   background-color: #ff6b35;
   border-radius: 4px;
+}
+
+/* Report action buttons */
+.btn-report {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  white-space: nowrap;
+  border: none;
+}
+
+.btn-report:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-report-outline {
+  background: #ffffff;
+  color: #0F172A;
+  border: 1.5px solid #0F172A;
+}
+
+.btn-report-outline:hover:not(:disabled) {
+  background: #0F172A;
+  color: #ffffff;
+}
+
+.btn-report-filled {
+  background: #0F172A;
+  color: #ffffff;
+  border: 1.5px solid #0F172A;
+}
+
+.btn-report-filled:hover:not(:disabled) {
+  background: #FF6B35;
+  border-color: #FF6B35;
+  color: #ffffff;
 }
 </style>

@@ -99,8 +99,8 @@
   top: 0;
   left: 0;
   width: 100%;
-  height: 4px;
-  background: linear-gradient(90deg, var(--accent-orange) 0%, var(--accent-blue) 100%);
+  height: 5px;
+  background: linear-gradient(90deg, #FF3300 0%, #FFB300 100%);
   transform: scaleX(0);
   transition: var(--transition-smooth);
   transform-origin: left;
@@ -108,7 +108,7 @@
 
 .feature-card:hover {
   transform: translateY(-8px);
-  box-shadow: 0 15px 30px rgba(15, 23, 42, 0.08), 0 0 15px rgba(59, 130, 246, 0.1) !important;
+  box-shadow: 0 15px 30px rgba(15, 23, 42, 0.08), 0 0 15px rgba(255, 179, 0, 0.15) !important;
 }
 
 .feature-card:hover::before {
@@ -126,14 +126,14 @@
 }
 
 .feature-card:hover .icon-container {
-  background: linear-gradient(135deg, var(--accent-orange) 0%, var(--accent-blue) 100%);
-  transform: translateY(-4px) scale(1.06);
-  box-shadow: 0 8px 15px rgba(59, 130, 246, 0.2);
+  background: linear-gradient(135deg, #FF2200 0%, #FFAA00 100%);
+  transform: translateY(-4px) scale(1.08);
+  box-shadow: 0 8px 20px rgba(255, 51, 0, 0.4);
 }
 
 .feature-card:hover .icon-container i {
-  -webkit-text-fill-color: white !important;
-  color: white !important;
+  -webkit-text-fill-color: #ffffff !important;
+  color: #ffffff !important;
 }
 
 .card-heading {

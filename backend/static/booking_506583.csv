@@ -1,0 +1,12 @@
+Sr No.,Booking ID,User ID,Username,Email,Trek Name,Booking Date,Status,Payment Status,Price
+1,TM-1,5,user3,user3@user.com,Everest Base Camp,2026-07-09,Cancelled,Pending,48000.0
+2,TM-2,5,user3,user3@user.com,Roopkund Trek,2026-07-09,Confirmed,Paid,12500.0
+3,TM-3,7,user5,user5@user.com,Everest Base Camp,2026-07-09,Confirmed,Paid,48000.0
+4,TM-4,7,user5,user5@user.com,Kedarkantha Trek,2026-07-09,Cancelled,Paid,9500.0
+5,TM-5,8,user6,user6@user.com,Everest Base Camp,2026-07-09,Confirmed,Paid,48000.0
+6,TM-6,8,user6,user6@user.com,Roopkund Trek,2026-07-09,Confirmed,Paid,12500.0
+7,TM-7,9,user7,user7@user.com,Everest Base Camp,2026-07-09,Confirmed,Paid,48000.0
+8,TM-9,20,Ridhi Sehgal,ridhisehgal1303@gmail.com,Chopta Tungnath Trek,2026-07-09,Confirmed,Paid,20000.0
+9,TM-10,10,user8,user8@user.com,Roopkund Trek,2026-07-10,Confirmed,Paid,12500.0
+10,TM-11,5,user3,user3@user.com,Valley of Flowers,2026-07-10,Cancelled,Paid,14500.0
+11,TM-12,23,test,test@user.com,Everest Base Camp,2026-07-12,Confirmed,Paid,48000.0

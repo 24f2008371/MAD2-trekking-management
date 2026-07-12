@@ -151,16 +151,16 @@ h1, h2, h3, h4, h5, h6, .font-heading {
 
 /* Icons with Orange + Blue blends */
 .icon-brand-glow {
-  background: linear-gradient(135deg, rgba(255, 107, 53, 0.1) 0%, rgba(59, 130, 246, 0.1) 100%);
-  color: var(--accent-orange);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: linear-gradient(135deg, #FF3300 0%, #FFB300 100%);
+  color: #ffffff;
+  border: none;
+  box-shadow: 0 4px 12px rgba(255, 51, 0, 0.2);
   transition: var(--transition-smooth);
 }
 
 .icon-brand-glow i {
-  background: linear-gradient(135deg, var(--accent-orange) 0%, var(--accent-blue) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
 }
 
 /* Hover Zoom Scale */

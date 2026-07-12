@@ -13,6 +13,10 @@ app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///trekking.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['JWT_SECRET_KEY'] = 'your_jwt_secret_key'
+app.config['CACHE_TYPE'] = 'RedisCache'
+app.config['CACHE_REDIS_HOST'] = 'redis://127.0.0.1:6379/0'
+app.config['broker_url'] = 'redis://127.0.0.1:6379/0'
+app.config['result_backend'] = 'redis://127.0.0.1:6379/0'
 
 UPLOAD_FOLDER = os.path.join(app.root_path, 'static', 'uploads')
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
@@ -22,9 +26,22 @@ CORS(app)
 db.init_app(app)
 jwt = JWTManager(app)
 
-# Register Blueprint containing all routes
-app.register_blueprint(api_bp)
+from celery_config import make_celery
 
+celery_app = make_celery(app)
+
+celery = celery_app
+
+celery.conf.beat_schedule = {
+    'send-monthly-report-every-two-minutes': {
+        'task': 'monthly_report',
+        'schedule': 120.0,
+    },
+}
+
+import tasks
+
+app.register_blueprint(api_bp)
 
 if __name__ == "__main__":
     with app.app_context():
