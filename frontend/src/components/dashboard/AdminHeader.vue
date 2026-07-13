@@ -47,8 +47,6 @@
         </div>
         <transition name="slide-fade">
           <div v-if="dropdownOpen" class="dropdown-menu-custom">
-            <router-link to="/admin/settings"><i class="bi bi-gear"></i> Settings</router-link>
-            <hr class="dropdown-divider" />
             <a href="#" @click.prevent="$emit('logout')" class="text-danger"><i class="bi bi-box-arrow-right"></i> Logout</a>
           </div>
         </transition>

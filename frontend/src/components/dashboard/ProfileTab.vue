@@ -3,7 +3,7 @@
     <div class="profile-card">
       <div class="profile-card-header">
         <h3>Manage Account</h3>
-        <p>Update your personal information, profile photo, and password.</p>
+        <p>Update your personal information and password.</p>
       </div>
       
       <div class="profile-card-body">
@@ -17,40 +17,8 @@
         </div>
 
         <div class="row g-4">
-          <!-- Avatar Selector Column -->
-          <div class="col-12 col-md-4 text-center border-end-custom">
-            <div class="avatar-preview-wrapper mb-3">
-              <img :src="avatarUrl" alt="Avatar Preview" class="avatar-large" />
-            </div>
-            
-            <h5 class="avatar-title">Profile Picture</h5>
-            <p class="avatar-subtitle">Select an avatar or paste a custom link</p>
-            
-            <div class="avatar-options mb-3">
-              <img 
-                v-for="(url, idx) in avatarPresets" 
-                :key="idx"
-                :src="url" 
-                class="avatar-option-thumb" 
-                :class="{ active: avatarUrl === url }"
-                @click="$emit('save-avatar', url)"
-              />
-            </div>
-            
-            <div class="custom-avatar-url">
-              <input 
-                :value="customAvatarInput" 
-                type="text" 
-                placeholder="Paste image URL..." 
-                class="form-control-custom text-center" 
-                @input="$emit('update:customAvatarInput', $event.target.value)"
-                @change="$emit('save-avatar', $event.target.value)"
-              />
-            </div>
-          </div>
-
           <!-- Details Form Column -->
-          <div class="col-12 col-md-8">
+          <div class="col-12">
             <form @submit.prevent="handleSubmit" class="profile-form d-flex flex-column gap-3">
               <div class="row g-3">
                 <div class="col-12 col-md-6">

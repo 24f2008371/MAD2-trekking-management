@@ -52,8 +52,7 @@ const navItems = [
   { name: 'Users (Trekkers)', path: '/admin/users', icon: '<i class="bi bi-people"></i>' },
   { name: 'Bookings', path: '/admin/bookings', icon: '<i class="bi bi-journal-check"></i>' },
   { name: 'Search', path: '/admin/search', icon: '<i class="bi bi-search"></i>' },
-  { name: 'Reports', path: '/admin/reports', icon: '<i class="bi bi-bar-chart-line"></i>' },
-  { name: 'Settings', path: '/admin/settings', icon: '<i class="bi bi-gear"></i>' }
+  { name: 'Reports', path: '/admin/reports', icon: '<i class="bi bi-bar-chart-line"></i>' }
 ]
 </script>
 

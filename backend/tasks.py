@@ -43,6 +43,7 @@ def csv_report():
 
 @celery_app.task(name="monthly_report")
 def monthly_report():
+    # 1. Send aggregated summary to Admin
     admin = User.query.filter_by(role='admin').first()
     admin_email = admin.email if admin else "admin@user.com"
 
@@ -57,10 +58,34 @@ def monthly_report():
             "price": b.trek.price if b.trek else 0.0
         })
 
-    # Render template using format_report helper
-    message = format_report('templates/admin_monthly_report.html', {"bookings": bookings_data})
-    send_email(admin_email, subject="Monthly Trekking Management Summary - Admin", message=message)
-    return "Admin monthly report sent"
+    admin_message = format_report('templates/admin_monthly_report.html', {"bookings": bookings_data})
+    send_email(admin_email, subject="Monthly Trekking Management Summary - Admin", message=admin_message)
+
+    # 2. Send individual summary report to each User
+    users = User.query.all()
+    for user in users:
+        if user.role != 'user':
+            continue
+        user_data = {}
+        user_data['username'] = user.username
+        user_data['email'] = user.email
+        user_trans = []
+        for booking in user.bookings:
+            this_trans = {}
+            this_trans["id"] = booking.id
+            this_trans["name"] = booking.trek.name if booking.trek else 'N/A'
+            this_trans["type"] = booking.status
+            this_trans["source"] = booking.trek.location if booking.trek else 'N/A'
+            this_trans["destination"] = booking.trek.name if booking.trek else 'N/A'
+            this_trans["delivery"] = booking.trek.start_date.strftime('%Y-%m-%d') if (booking.trek and booking.trek.start_date) else ''
+            this_trans["amount"] = booking.trek.price if booking.trek else 0.0
+            this_trans["user"] = user.username
+            user_trans.append(this_trans)
+        user_data['transactions'] = user_trans
+        user_message = format_report('templates/mail_details.html', user_data)
+        send_email(user.email, subject="Your Monthly Trekking Summary - TrekMate", message=user_message)
+
+    return "Admin and User monthly reports sent successfully"
 
 @celery_app.task(name="delivery_update")
 def delivery_report(username, trek_name="", booking_id="", status=""):

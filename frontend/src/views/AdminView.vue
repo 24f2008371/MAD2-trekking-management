@@ -54,7 +54,6 @@ const pageTitle = computed(() => {
     case 'AdminBookings': return 'Bookings Registry'
     case 'AdminSearch': return 'Search Portal'
     case 'AdminReports': return 'Analytics & Reports'
-    case 'AdminSettings': return 'Portal Settings'
     default: return 'Admin Console'
   }
 })
@@ -68,7 +67,6 @@ const pageSubtitle = computed(() => {
     case 'AdminBookings': return 'Approve, review, or cancel active reservation requests.'
     case 'AdminSearch': return 'Perform global queries across all dataset tables.'
     case 'AdminReports': return 'Track performance indexes, charts, and revenue statistics.'
-    case 'AdminSettings': return 'Manage system constants, support email, and restrictions.'
     default: return 'Manage TrekMate administrative tasks.'
   }
 })
