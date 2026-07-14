@@ -59,7 +59,6 @@ if __name__ == "__main__":
             db.session.commit()
             print("Database created and admin user added!")
 
-        # Seed 10 staff members (staff1 to staff10) with password '12'
         seeded_any = False
         for i in range(1, 11):
             st_username = f'staff{i}'
@@ -72,6 +71,19 @@ if __name__ == "__main__":
         if seeded_any:
             db.session.commit()
             print("Staff members staff1 - staff10 seeded successfully!")
+
+        seeded_users = False
+        for i in range(1, 11):
+            u_username = f'user{i}'
+            if not User.query.filter_by(username=u_username).first():
+                db.session.add(User(
+                    username=u_username, email=f'{u_username}@user.com', password=generate_password_hash('12'),
+                    phone=f'887654321{i-1}', role='user', status='active'
+                ))
+                seeded_users = True
+        if seeded_users:
+            db.session.commit()
+            print("Users user1 - user10 seeded successfully!")
             
         if not Trek.query.first():
             t1 = Trek(name='Everest Base Camp', location='Nepal', difficulty='Hard', duration=12, available_slots=8, price=48000, start_date=date(2026, 8, 15), end_date=date(2026, 8, 27), image='https://images.unsplash.com/photo-1544735716-392fe2489ffa?w=600&q=80', status='Open')

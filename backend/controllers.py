@@ -88,8 +88,6 @@ def profile():
     db.session.commit()
     return jsonify({"success": True, "message": "Profile updated successfully", "data": {"username": user.username, "email": user.email, "phone": user.phone, "role": user.role}}), 200
 
-# ================= ADMIN ROUTES =================
-
 @api_bp.route('/api/admin/stats', methods=['GET'])
 @jwt_required()
 @role_required('admin')
@@ -316,14 +314,11 @@ def admin_global_search():
         return jsonify({"success": True, "data": []}), 200
         
     results = []
-    # Search Users
     for u in User.query.filter((User.username.like(f'%{q}%')) | (User.email.like(f'%{q}%')) | (User.phone.like(f'%{q}%'))).all():
         type_str = 'Staff' if u.role == 'staff' else 'User'
         results.append({"key": f"u-{u.id}", "type": type_str, "title": u.username, "subtitle": u.email, "matchText": f"Matched fields in {type_str}"})
-    # Search Treks
     for t in Trek.query.filter((Trek.name.like(f'%{q}%')) | (Trek.location.like(f'%{q}%')) | (Trek.difficulty.like(f'%{q}%'))).all():
         results.append({"key": f"t-{t.id}", "type": "Trek", "title": t.name, "subtitle": f"{t.location} | {t.difficulty} ({t.duration} Days)", "matchText": "Matched fields in Trek"})
-    # Search Bookings
     for b in Booking.query.all():
         b_id_str = f"TM-{b.id}"
         if q in b_id_str.lower() or q in b.user.username.lower() or q in b.trek.name.lower() or q in b.status.lower():
@@ -389,8 +384,6 @@ def admin_reports():
         }
     }), 200
 
-# ================= USER ROUTES =================
-
 @api_bp.route('/api/treks', methods=['GET'])
 def get_treks():
     treks = Trek.query.all()
@@ -447,8 +440,6 @@ def user_bookings():
         "trekDates": f"{trek.start_date.strftime('%d %b')} - {trek.end_date.strftime('%d %b %Y')}" if trek.start_date and trek.end_date else '', "status": new_booking.status
     }}), 201
 
-# ================= STAFF ROUTES =================
-
 @api_bp.route('/api/staff/stats', methods=['GET'])
 @jwt_required()
 @role_required('staff')
@@ -503,8 +494,6 @@ def staff_update_trek_status(t_id):
     trek.status = new_status
     db.session.commit()
     return jsonify({"success": True, "message": f"Trek status updated to {new_status}"}), 200
-
-# ================= CELERY REPORT ROUTES =================
 
 @api_bp.route('/api/admin/export-csv', methods=['POST'])
 @jwt_required()

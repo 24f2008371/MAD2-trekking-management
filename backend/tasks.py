@@ -13,7 +13,6 @@ def csv_report():
     bookings = Booking.query.all()
     csv_file_name = f"booking_{datetime.datetime.now().strftime('%f')}.csv"
     
-    # Ensure static directory exists
     os.makedirs('static', exist_ok=True)
     
     with open(f'static/{csv_file_name}', 'w', newline="", encoding='utf-8') as csvfile:
@@ -43,7 +42,6 @@ def csv_report():
 
 @celery_app.task(name="monthly_report")
 def monthly_report():
-    # 1. Send aggregated summary to Admin
     admin = User.query.filter_by(role='admin').first()
     admin_email = admin.email if admin else "admin@user.com"
 
@@ -61,7 +59,6 @@ def monthly_report():
     admin_message = format_report('templates/admin_monthly_report.html', {"bookings": bookings_data})
     send_email(admin_email, subject="Monthly Trekking Management Summary - Admin", message=admin_message)
 
-    # 2. Send individual summary report to each User
     users = User.query.all()
     for user in users:
         if user.role != 'user':

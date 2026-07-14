@@ -1,0 +1,403 @@
+openapi: 3.0.3
+info:
+  title: TrekMate - Trekking Management Portal API
+  description: API specifications for users, staff guides, and administrators of the TrekMate application.
+  version: 1.0.0
+servers:
+  - url: http://localhost:5000
+    description: Development server
+paths:
+  /api/register:
+    post:
+      summary: User Registration
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                email:
+                  type: string
+                password:
+                  type: string
+                phone:
+                  type: string
+              required:
+                - username
+                - email
+                - password
+                - phone
+      responses:
+        '201':
+          description: Registration successful
+        '400':
+          description: Missing parameters or user already exists
+
+  /api/login:
+    post:
+      summary: User Login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                password:
+                  type: string
+              required:
+                - username
+                - password
+      responses:
+        '200':
+          description: Login successful, returns JWT token
+        '401':
+          description: Invalid credentials
+        '403':
+          description: User is blacklisted
+
+  /api/profile:
+    get:
+      summary: Get User Profile
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: User profile details
+    put:
+      summary: Update User Profile
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                email:
+                  type: string
+                phone:
+                  type: string
+                password:
+                  type: string
+      responses:
+        '200':
+          description: Profile updated successfully
+
+  /api/admin/stats:
+    get:
+      summary: Get Administrative Stats
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Overview counts and metrics
+
+  /api/admin/treks:
+    get:
+      summary: Get All Treks (Admin)
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Array of all treks
+    post:
+      summary: Create New Trek
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                location:
+                  type: string
+                difficulty:
+                  type: string
+                duration:
+                  type: integer
+                slots:
+                  type: integer
+                price:
+                  type: number
+                start_date:
+                  type: string
+                  format: date
+                end_date:
+                  type: string
+                  format: date
+                image:
+                  type: string
+                staff_id:
+                  type: integer
+      responses:
+        '201':
+          description: Trek created successfully
+
+  /api/admin/treks/{id}:
+    put:
+      summary: Update Trek Details
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Trek details updated
+    delete:
+      summary: Delete a Trek
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Trek deleted successfully
+
+  /api/admin/users:
+    get:
+      summary: List Users and Guides
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: List of registered users and staff
+
+  /api/admin/users/{id}/blacklist:
+    put:
+      summary: Blacklist or Unblacklist a User
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Blacklist status updated
+
+  /api/admin/users/{id}/role:
+    put:
+      summary: Change User Role
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                role:
+                  type: string
+              required:
+                - role
+      responses:
+        '200':
+          description: User role updated
+
+  /api/admin/search:
+    get:
+      summary: Global Admin Search
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Matches from users, treks, and bookings
+
+  /api/admin/reports:
+    get:
+      summary: Get Reports Charts Data
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Analytics charts dataset
+
+  /api/admin/export-csv:
+    post:
+      summary: Export Bookings CSV (Async Task)
+      security:
+        - bearerAuth: []
+      responses:
+        '202':
+          description: CSV Export task triggered successfully
+
+  /api/admin/task-status/{task_id}:
+    get:
+      summary: Get Status of Async Export Task
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: task_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Status of the task (SUCCESS/PENDING) and file path if done
+
+  /api/admin/trigger-monthly-report:
+    post:
+      summary: Trigger Monthly Summary Email (Async Task)
+      security:
+        - bearerAuth: []
+      responses:
+        '202':
+          description: Monthly report task triggered
+
+  /api/treks:
+    get:
+      summary: Get All Active Treks (Public)
+      responses:
+        '200':
+          description: List of active treks
+
+  /api/bookings:
+    get:
+      summary: Get Current User Bookings
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Booking history list
+    post:
+      summary: Book a Trek
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                trek_id:
+                  type: integer
+              required:
+                - trek_id
+      responses:
+        '201':
+          description: Trek booked successfully
+
+  /api/bookings/{id}/cancel:
+    put:
+      summary: Cancel Booking
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Booking cancelled
+
+  /api/staff/stats:
+    get:
+      summary: Get Staff Dashboard Stats
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Guide assigned stats overview
+
+  /api/staff/treks:
+    get:
+      summary: Get Staff Assigned Treks
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: List of treks assigned to the guide
+
+  /api/staff/treks/{t_id}/participants:
+    get:
+      summary: Get Trek Participants List
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: t_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: List of participant users for the trek
+
+  /api/staff/treks/{t_id}/status:
+    put:
+      summary: Update Trek Operation Status
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: t_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+              required:
+                - status
+      responses:
+        '200':
+          description: Trek operation status updated
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
