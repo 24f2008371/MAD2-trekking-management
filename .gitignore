@@ -6,6 +6,7 @@ instance/
 
 # Node
 frontend/node_modules/
+node_modules/
 
 # Vite
 frontend/dist/
